@@ -1,0 +1,38 @@
+// Proposed calls and data flow; arrows do not denote includes or inheritance.
+digraph Calls {
+    graph [label="Вызовы и данные: вариант с отдельным PolygonProcessor", labelloc=t, fontname="Arial", nodesep=0.6, ranksep=0.8];
+    node [shape=box, style=rounded, fontname="Arial", margin="0.18,0.12"];
+    edge [fontname="Arial"];
+    user [label="user / main"];
+    parser [label="Parser"];
+    input [label="InitPolysData\nсписки вершин полигонов"];
+
+    subgraph cluster_processor {
+        label="polygonProcessor / PolysHandler"; fontname="Arial"; color="#a80000";
+        coordinator [label="PolygonProcessor\n────────────────────\nPolyWorld world_\nRenderer renderer_\n────────────────────\ncalculateIntersections()\ndrawPolys()"];
+        world [label="PolyWorld — объект world_\n────────────────────\nvector<Poly> polys_\nIntersectionData intersectionData\n────────────────────\nконструктор принимает InitPolysData\ncalculateIntersections()"];
+        calculator [label="PolyCalculator — локальный calculator\ncalculateIntersections(polys)\n────────────────────\nперебрать пары → IntersectsPoly(first, second)\n→ собрать IntersectionData"];
+        result [label="IntersectionData\n────────────────────\nEntry {индекс A, индекс B, PolyIntersection}\nEntry {индекс C, индекс D, PolyIntersection}\n..."];
+    }
+    subgraph cluster_renderer {
+        label="Renderer"; fontname="Arial"; color="#398b85";
+        renderer [label="Объект renderer_\ndrawPolys(polys, intersections)"];
+        scene [label="Scene\n────────────────────\nObjects objects_\nCamera camera_\nLighting lighting_"];
+    }
+    geometry [label="geometry\nPoly и Point"];
+
+    user -> parser [label="1. parse(...)"];
+    parser -> input [label="результат"];
+    input -> coordinator [label="2. параметр конструктора"];
+    coordinator -> world [label="передать InitPolysData\nпри создании world_"];
+    user -> coordinator [label="3. calculateIntersections()\n4. drawPolys()"];
+    coordinator -> world [label="3. world_.calculateIntersections()"];
+    world -> calculator [label="создать calculator\nвызвать calculateIntersections(polys_)"];
+    calculator -> result [label="вернуть результат"];
+    result -> world [label="сохранить в intersectionData"];
+    world -> coordinator [label="предоставить polys_ и intersectionData\nинтерфейс чтения ещё не добавлен", style=dashed];
+    coordinator -> renderer [label="4. renderer_.drawPolys(polys, intersections)"];
+    renderer -> scene [label="обновить Objects и нарисовать кадр\nс текущими Camera и Lighting"];
+    geometry -> world [style=dashed, label="геометрические типы"];
+    geometry -> calculator [style=dashed, label="геометрические типы"];
+}

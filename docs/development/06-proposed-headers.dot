@@ -1,0 +1,53 @@
+// Proposed organization based on the user's module_connections sketch.
+// Every arrow A -> B means: A directly includes B.
+// This is a proposal; no C++ headers are moved or created by this diagram.
+digraph Headers {
+    graph [label="Предлагаемые заголовки: A → B означает #include B в A", labelloc=t, fontname="Arial", rankdir=TB, nodesep=0.6, ranksep=0.8];
+    node [shape=box, style=rounded, fontname="Arial", margin="0.18,0.12"];
+    edge [fontname="Arial", color="#666666"];
+
+    parser [label="parser.hpp\nParser::parse(...) → InitPolysData"];
+    subgraph cluster_processor {
+        label="polygonProcessor (бывший PolysHandler на наброске)";
+        fontname="Arial"; color="#a80000";
+        coordinator [label="polygonProcessor.hpp\nclass PolygonProcessor\n────────────────────\nполя: PolyWorld world_; Renderer renderer_\nметоды: calculateIntersections(); drawPolys()"];
+        world [label="polyWorld.hpp\nclass PolyWorld\n────────────────────\nполя: vector<Poly> polys_; IntersectionData intersectionData\nметод: calculateIntersections()\nлокальный объект: PolyCalculator calculator"];
+        calculator [label="polyCalculator.hpp\nclass PolyCalculator\n────────────────────\ncalculateIntersections(polys) → IntersectionData\nIntersectsPoly(first, second) → optional<PolyIntersection>"];
+        input [label="initPolysData.hpp — предлагаемый отдельный файл\nstruct InitPolysData\n────────────────────\nvector<vector<Point>> data\nвнешний vector: полигоны\nвнутренний vector: вершины одного полигона", color="#a80000"];
+        intersections [label="intersectionData.hpp\nPolyIntersection: kind + vector<Point>\nIntersectionData: vector<Entry>\nEntry: firstPolyIndex, secondPolyIndex, intersection"];
+    }
+
+    subgraph cluster_render {
+        label="render"; fontname="Arial"; color="#398b85";
+        renderer [label="renderer.hpp\nclass Renderer\nполе: Scene scene_\nметод: drawPolys(polys, intersections)"];
+        scene [label="scene.hpp\nScene\nполя: Objects objects_; Camera camera_; Lighting lighting_"];
+        objects [label="objects.hpp\nObjects"];
+        camera [label="camera.hpp\nCamera"];
+        lighting [label="lighting.hpp\nLighting"];
+    }
+    subgraph cluster_geometry {
+        label="geometry"; fontname="Arial"; color="#999999";
+        poly [label="poly.hpp\nPoly"];
+        point [label="point.hpp\nPoint"];
+    }
+
+    parser -> input;
+    coordinator -> input;
+    coordinator -> world;
+    coordinator -> renderer;
+    world -> input;
+    world -> calculator;
+    world -> intersections;
+    world -> poly;
+    calculator -> poly;
+    calculator -> intersections;
+    intersections -> point;
+    input -> point;
+    poly -> point;
+    renderer -> scene;
+    renderer -> poly;
+    renderer -> intersections;
+    scene -> objects;
+    scene -> camera;
+    scene -> lighting;
+}
