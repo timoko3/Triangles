@@ -1,0 +1,58 @@
+// Overview at the same abstraction level as module_connections.png.
+// Arrows show calls or data flow, not header includes.
+digraph ModuleConnectionsOverview {
+    graph [label="Связи модулей: подготовка данных для рендера", labelloc=t, fontname="Arial", compound=true, nodesep=0.55, ranksep=0.65, bgcolor=white];
+    node [shape=ellipse, fontname="Arial"];
+    edge [fontname="Arial", fontsize=11];
+
+    user [label="user", color="#a80000"];
+    parser [label="Parser"];
+    geometry [label="geometry\nPoly, Point"];
+
+    subgraph cluster_processor {
+        label="polygonProcessor / PolysHandler";
+        color="#a80000"; fontname="Arial";
+        processor [label="PolyProcessor", style=filled, fillcolor="#e8e5ff", color="#5141cc"];
+        input [label="InitPolysData"];
+        world [label="PolyWorld", style=filled, fillcolor="#e8e5ff", color="#5141cc"];
+        polys [label="Polys"];
+        calculator [label="PolyCalculator\nIntersectsPoly"];
+        intersections [label="IntersectionData"];
+        preparer [label="RenderDataPreparer", style=filled, fillcolor="#fff5d6"];
+        style [label="RenderStyle\nцвета", style=filled, fillcolor="#fff5d6"];
+
+        processor -> world [label="calculateIntersections"];
+        input -> world;
+        world -> polys;
+        world -> calculator;
+        polys -> calculator;
+        calculator -> intersections;
+        processor -> preparer [label="prepare"];
+        polys -> preparer;
+        intersections -> preparer;
+        style -> preparer;
+    }
+
+    subgraph cluster_render {
+        label="render"; color="#398b85"; fontname="Arial";
+        data [label="RenderData\nObjects + Highlights", style=filled, fillcolor="#fff5d6"];
+        renderer [label="Renderer", style=filled, fillcolor="#e7f5f2"];
+        scene [label="Scene (план)"];
+        objects [label="Objects"];
+        camera [label="Camera"];
+        lighting [label="Lighting"];
+        data -> renderer;
+        renderer -> scene;
+        scene -> objects;
+        scene -> camera;
+        scene -> lighting;
+    }
+
+    user -> parser;
+    parser -> input;
+    user -> processor;
+    geometry -> polys;
+    geometry -> calculator;
+    preparer -> data;
+    processor -> renderer [label="draw"];
+}

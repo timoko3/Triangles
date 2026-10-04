@@ -1,0 +1,52 @@
+// Updated version of 06-proposed-headers.dot; the previous image is preserved.
+// Solid A -> B: a direct include in the current headers.
+// Dashed A -> B: a planned dependency; the corresponding types are not implemented.
+digraph HeadersWithRenderAdapter {
+    graph [label="Организация модулей с подготовкой данных для рендера\nA → B: #include B в A; пунктир: планируемая зависимость", labelloc=t, fontname="Arial", fontsize=18, rankdir=TB, nodesep=0.5, ranksep=0.8, bgcolor=white];
+    node [shape=box, style="rounded,filled", fillcolor=white, fontname="Arial", margin="0.18,0.12"];
+    edge [fontname="Arial", color="#666666"];
+
+    parser [label="parser.hpp (план)\nParser::parse(...) → InitPolysData"];
+    subgraph cluster_processor {
+        label="polygonProcessor / PolysHandler";
+        fontname="Arial"; color="#a80000";
+        coordinator [label="polyProcessor.hpp\nPolyProcessor<DimWorld, DimPoly>\n────────────────────\nPolyWorld world_; Renderer renderer_; RenderStyle renderStyle_\ncalculateIntersections(); drawPolys()\nлокальные объекты drawPolys(): preparer, RenderData", fillcolor="#f1edff"];
+        world [label="polyWorld.hpp\nPolyWorld<DimWorld, DimPoly>\n────────────────────\nvector<Poly<DimPoly>> polys_; IntersectionData intersectionData_\ncalculateIntersections(); polys(); intersectionData()\nлокальный PolyCalculator<DimPoly> calculator"];
+        calculator [label="polyCalculator.hpp\nPolyCalculator<DimPoly>\n────────────────────\ncalculateIntersections(polys) → IntersectionData\nIntersectsPoly(first, second) → optional<PolyIntersection>"];
+        input [label="initPolysData.hpp\nInitPolysData\n────────────────────\nvector<vector<Point>> data\nполигоны → списки вершин"];
+        intersections [label="intersectionData.hpp\nPolyIntersection: Kind + vector<Point>\nIntersectionData: vector<Entry>\nEntry: индексы пары + PolyIntersection"];
+        preparer [label="renderDataPreparer.hpp\nRenderDataPreparer<DimWorld, DimPoly>\n────────────────────\nprepare(polys, intersections, style) → RenderData\nтриангуляция, нормали, цвета, подсветка\n────────────────────\nRenderStyle:\npolyColor — серый\nintersectingPolyColor — красный\nintersectionColor — жёлтый", fillcolor="#fff5d6"];
+    }
+
+    subgraph cluster_render {
+        label="render"; fontname="Arial"; color="#398b85";
+        renderer [label="renderer.hpp\nRenderer — НЕ шаблонный\n────────────────────\ndraw(const RenderData&)\nне принимает Poly, Point или IntersectionData", fillcolor="#e7f5f2"];
+        renderdata [label="renderData.hpp\nRenderData\n────────────────────\nvector<RenderPrimitive> objects\nvector<RenderPrimitive> highlights\n────────────────────\nRenderPrimitive: topology, RGBA color, vertices\nTopology: Points / Lines / Triangles\nRenderVertex: position[3], normal[3]\n────────────────────\npoints/lines/areas пересечения + их вершины\nв отдельном слое highlights", fillcolor="#fff5d6"];
+        scene [label="Scene (план)\nObjects objects_; Camera camera_; Lighting lighting_\nсостояние Renderer; пока не реализовано", style="rounded,dashed"];
+    }
+    subgraph cluster_geometry {
+        label="geometry (план)"; fontname="Arial"; color="#999999";
+        poly [label="Poly<DimPoly>\nопределение ещё не добавлено", style="rounded,dashed"];
+        point [label="Point\nопределение ещё не добавлено", style="rounded,dashed"];
+    }
+
+    parser -> input [style=dashed];
+    coordinator -> input;
+    coordinator -> world;
+    coordinator -> intersections;
+    coordinator -> preparer;
+    coordinator -> renderer;
+    world -> input;
+    world -> calculator;
+    world -> intersections;
+    world -> poly [style=dashed];
+    calculator -> poly [style=dashed];
+    calculator -> intersections;
+    intersections -> point [style=dashed];
+    input -> point [style=dashed];
+    preparer -> poly [style=dashed];
+    preparer -> intersections;
+    preparer -> renderdata;
+    renderer -> renderdata;
+    renderer -> scene [style=dashed];
+}
