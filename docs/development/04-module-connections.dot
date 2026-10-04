@@ -1,0 +1,37 @@
+// Source: sketch pages 4-5, which form a single diagram.
+// Arrow directions follow the sketch; they do not imply ownership or UML inheritance.
+digraph ModuleConnections {
+    graph [label="Связи модулей (страницы 4-5)", labelloc=t, fontname="Arial", compound=true, nodesep=0.6, ranksep=0.8];
+    node [shape=ellipse, fontname="Arial"];
+    edge [fontname="Arial"];
+    subgraph cluster_handler {
+        label="PolysHandler"; color="#a80000"; fontname="Arial";
+        poly [label="Poly"];
+        data [label="IntersectionData"];
+        intersector [label="Intersector"];
+        world [label="PolyWorld", style=filled, fillcolor="#e8e5ff", color="#5141cc"];
+        calculator [label="PolyCalculator"];
+        draw [label="draw"];
+        poly -> data;
+        poly -> calculator;
+        data -> intersector;
+        data -> world;
+        data -> draw;
+        world -> intersector;
+        world -> calculator;
+        world -> draw;
+        calculator -> intersector;
+    }
+    geometry [label="geometry"];
+    geometry -> poly;
+    user [label="user", color="#a80000"];
+    user -> world;
+    subgraph cluster_renderer {
+        label="Renderer"; color="#398b85"; fontname="Arial";
+        polys [label="Polys"];
+        lighting [label="Lighting"];
+        camera [label="Camera"];
+    }
+    draw -> polys [lhead=cluster_renderer];
+    user -> polys [label="drawScene", lhead=cluster_renderer];
+}
