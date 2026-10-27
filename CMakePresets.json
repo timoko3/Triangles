@@ -1,0 +1,41 @@
+{
+  "version": 5,
+  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}",
+      "cacheVariables": {
+        "TRIANGLES_BUILD_APP": false
+      }
+    },
+    {
+      "name": "debug",
+      "displayName": "Debug scaffold",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "release",
+      "displayName": "Release scaffold",
+      "inherits": "base",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "quality",
+      "displayName": "Compilation database for clang-tidy",
+      "inherits": "debug",
+      "cacheVariables": {
+        "TRIANGLES_BUILD_APP": true,
+        "CMAKE_EXPORT_COMPILE_COMMANDS": true
+      }
+    }
+  ],
+  "buildPresets": [
+    { "name": "debug", "configurePreset": "debug" },
+    { "name": "release", "configurePreset": "release" },
+    { "name": "quality", "configurePreset": "quality" }
+  ]
+}

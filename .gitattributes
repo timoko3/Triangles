@@ -1,0 +1,13 @@
+# clang-format uses LF on every platform, including Windows checkouts.
+*.c text eol=lf
+*.cc text eol=lf
+*.cpp text eol=lf
+*.cxx text eol=lf
+*.h text eol=lf
+*.hh text eol=lf
+*.hpp text eol=lf
+*.hxx text eol=lf
+.clang-format text eol=lf
+.clang-tidy text eol=lf
+*.nix text eol=lf
+flake.lock text eol=lf

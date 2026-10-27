@@ -1,0 +1,13 @@
+/build/
+/build-*/
+/cmake-build-*/
+/CMakeUserPresets.json
+/CMakeFiles/
+/CMakeCache.txt
+/compile_commands.json
+__pycache__/
+/result
+/result-*
+
+# Preserve local sources after removing the generalFunctions submodule.
+/generalFunctions/
