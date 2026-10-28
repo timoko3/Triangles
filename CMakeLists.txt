@@ -20,6 +20,15 @@ function(triangles_configure_target target)
 endfunction()
 
 if(TRIANGLES_BUILD_APP)
-    add_executable(triangles main.cpp)
+    add_executable(triangles
+        main.cpp
+        parser/parser.cpp
+    )
+
+    target_include_directories(triangles PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/polygonProcessor"
+    )
+
     triangles_configure_target(triangles)
 endif()
