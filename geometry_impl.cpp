@@ -2,12 +2,11 @@ module;
 
 #include <cmath>
 #include <stdexcept>
+#include <vector>
 
 module geometry;
 
 namespace geometry {
-
-constexpr float EPSILON = 1e-9;
 
 point_t::point_t(double x, double y, double z)
     : x_(x),
@@ -29,30 +28,39 @@ point_t::equal (const point_t &refPoint) const {
 
 double
 point_t::distance(const point_t &otherPoint) const {
-    double dx = x_ - otherPoint_x;
-    double dy = y_ - otherPoint_y;
-    double dz = z_ - otherPoint_z;
+    double dx = x_ - otherPoint.x();
+    double dy = y_ - otherPoint.y();
+    double dz = z_ - otherPoint.z();
 
     return std::hypot(dx, dy, dz);
 };
 
+segment_t::segment_t(const point_t &a, const point_t &b)
+    : a_(a),
+      b_(b) {
+    if (a.equal(b)) {
+        throw std::invalid_argument
+            ("The line segment must be constructed using two distinct points.");
+    }
+}
 
-vector_t::vector_t(const point_t &a, const point_t &b) {
-    x_ = a.x_ - b.x_;
-    y_ = a.y_ - b.y_;
-    x_ = a.z_ - b.z_;
-};
+vector_t
+segment_t::direction() const {
+    vector_t dir(a_, b_);
+    return dir;
+}
+
+vector_t::vector_t(const point_t &origin, const point_t &end) {
+    x_ = end.x() - origin.x();
+    y_ = end.y() - origin.y();
+    x_ = end.z() - origin.z();
+}
 
 bool
 vector_t::equal(const vector_t &refVector) const {
     return ((std::fabs(refVector.x_ - x_) < EPSILON)&&
             (std::fabs(refVector.y_ - y_) < EPSILON)&&
             (std::fabs(refVector.z_ - z_) < EPSILON));
-};
-
-bool
-vector_t::isValid() const {
-    return !(std::isnan(x_) || std::isnan(y_) || std::isnan(z_));
 };
 
 double
@@ -69,15 +77,20 @@ vector_t::cross(const vector_t &otherVector) const {
     );
 }
 
-triangle_t::triangle_t(const point_t &firstPoint,
-                       const point_t &secondPoint,
-                       const point_t &thirdPoint)
-    : a_(firstPoint),
-        b_(secondPoint),
-        c_(thirdPoint) {
+vector_t
+vector_t::mulByNum(double number) {
+    vector_t newVec(x() * number, y() * number, z() * number);
+    return newVec;
+}
 
-    vector_t vecAB(a_, b_);
-    vector_t vecAC(a_, c_);
+
+triangle_t::triangle_t(const point_t& firstPoint,
+                       const point_t& secondPoint,
+                       const point_t& thirdPoint)
+    : polygon_t({firstPoint, secondPoint, thirdPoint}) {
+
+    vector_t vecAB(point(0), point(1));
+    vector_t vecAC(point(0), point(2));
 
     vector_t normal = vecAB.cross(vecAC);
     if (normal.isZero()) {
@@ -87,32 +100,48 @@ triangle_t::triangle_t(const point_t &firstPoint,
 
 double
 triangle_t::lenAB() const {
-    return a_.distance(b_);
+    return point(0).distance(point(1));
 }
 
 double
 triangle_t::lenBC() const {
-    return b_.distance(c_);
+    return point(1).distance(point(2));
 }
 
 double
 triangle_t::lenCA() const {
-    return c_.distance(a_);
+    return point(2).distance(point(0));
+}
+
+polygon_t::polygon_t(std::vector<point_t> points)
+    : points_(points) {
+    if (points.size() < 3) {
+        throw std::invalid_argument("The polygon must have at least three vertices.");
+    }
 }
 
 double
-vector_t::area () const {
-    vector_t vecAB(a_, b_);
-    vector_t vecAC(a_, c_);
+polygon_t::area() const {
+    double area = 0;
 
-    vector_t normal = vecAB.cross(vecAC);
-    return normal.length() / 2;
-};
-    vector_t unitNormal () const;
+    for (std::size_t i = 0; i < size() - 2; i++) {
+        vector_t firstTriangleSide(point(0), point(i + 1));
+        vector_t secondTriangleSide(point(0), point(i + 2));
 
-point_t
-centroid() const;
+        vector_t crossProd = firstTriangleSide.cross(secondTriangleSide);
+        area += crossProd.length() / 2;
+    }
 
-    bool intersects (const triangle_t &otherTriangle);
+    return area;
+}
+
+vector_t
+polygon_t::unitNormal() const {
+    vector_t firstVec(point(0), point(1));
+    vector_t secondVec(point(0), point(2));
+
+    vector_t normal = firstVec.cross(secondVec);
+    return normal.mulByNum(1 / normal.length());
+}
 
 } // namespace geometry
