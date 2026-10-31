@@ -4,13 +4,18 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
+    nixGL = {
+      url = "github:nix-community/nixGL";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     generalFunctions = {
       url = "github:timoko3/generalFunctions";
       flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, generalFunctions, ... }:
+  outputs = { self, nixpkgs, nixGL, generalFunctions, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
@@ -23,6 +28,19 @@
       python = pkgs.python3.withPackages (packages: [
         packages.pyyaml
       ]);
+
+      gladSources = pkgs.runCommand "glad-opengl-3.3" {
+        nativeBuildInputs = [
+          pkgs.python3Packages.glad2
+        ];
+      } ''
+        glad \
+          --api gl:core=3.3 \
+          --extensions "" \
+          --reproducible \
+          --out-path "$out" \
+          c
+      '';
 
       mkQualityTool = tool: pkgs.writeShellScriptBin "${tool}-18" ''
         exec ${llvm.clang-tools}/bin/${tool} "$@"
@@ -40,6 +58,7 @@
           pkgs.ninja
           pkgs.git
           python
+          nixGL.packages.${system}.nixGLIntel
         ] ++ qualityTools;
 
         buildInputs = [
@@ -48,6 +67,7 @@
         ];
 
         GENERAL_FUNCTIONS_DIR = "${generalFunctions}";
+        GLAD_SOURCE_DIR = "${gladSources}";
 
         shellHook = ''
           echo "Triangles environment: LLVM 18, CMake, Ninja, Python, GLFW and GLM."
