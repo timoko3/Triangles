@@ -2,11 +2,11 @@
 
 #include <cstddef>
 
+#include "../render/renderer.hpp"
 #include "initPolysData.hpp"
 #include "intersectionData.hpp"
 #include "polyWorld.hpp"
 #include "renderDataPreparer.hpp"
-#include "../render/renderer.hpp"
 
 namespace HW3D {
 
@@ -26,9 +26,8 @@ public:
 
     void drawPolys() {
         RenderDataPreparer<DimWorld, DimPoly> preparer;
-        RenderData data = preparer.prepare(world_.polys(),
-                                           world_.intersectionData(),
-                                           renderStyle_);
+        RenderData data = preparer.prepare(
+            world_.polys(), world_.intersectionData(), renderStyle_);
         renderer_.draw(data);
     }
 };

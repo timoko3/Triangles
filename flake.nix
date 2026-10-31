@@ -1,9 +1,14 @@
 {
-  description = "Triangles development environment and CMake scaffold checks";
+    description = "Triangles development environment and CMake scaffold checks";
 
-  inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
+    inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
 
-  outputs = { self, nixpkgs, ... }:
+    inputs.generalFunctions = {
+        url = "github:timoko3/generalFunctions";
+        flake = false;
+    };
+
+    outputs = { self, nixpkgs, generalFunctions, ... }:
     let
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
@@ -25,6 +30,7 @@
 
       devShells.${system}.default = (pkgs.mkShell.override { stdenv = llvm.stdenv; }) {
         packages = [ pkgs.cmake pkgs.ninja pkgs.git python ] ++ qualityTools;
+        GENERAL_FUNCTIONS_DIR = "${generalFunctions}";
         shellHook = ''
           echo "Triangles environment: LLVM 18, CMake, Ninja and Python."
         '';
