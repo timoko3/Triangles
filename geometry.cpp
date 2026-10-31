@@ -5,9 +5,11 @@ module;
 
 export module geometry;
 
-namespace geometry {
+export namespace geometry {
 
 constexpr double EPSILON = 1e-9;
+
+bool isDoubleZero(double num) { return std::fabs(num) < EPSILON; }
 
 class point_t {
 private:
@@ -22,7 +24,7 @@ public:
     double y() const { return y_; };
     double z() const { return z_; };
 
-    bool equal(const point_t &refPoint) const;
+    bool operator==(const point_t &refPoint) const;
     double distance(const point_t &otherPoint) const;
 };
 
@@ -40,12 +42,21 @@ public:
     double z() const { return z_; };
 
     double length() const;
-    bool isZero() const { return (length() < EPSILON); }
+    bool isZero() const { return geometry::isDoubleZero(length()); }
+    vector_t normalized() const;
 
-    bool equal(const vector_t &refVector) const;
+    bool operator==(const vector_t &otherVector) const;
+
+    vector_t& operator+=(const vector_t &otherVector);
+    vector_t& operator-=(const vector_t &otherVector);
+    vector_t operator*(double number) const;
+
     vector_t cross(const vector_t &otherVector) const;
-    vector_t mulByNum(double number);
+    double dot(const vector_t &otherVector) const;
 };
+
+vector_t operator+(const vector_t& x, const vector_t& y);
+vector_t operator-(const vector_t& x, const vector_t& y);
 
 
 class segment_t {
@@ -53,6 +64,9 @@ class segment_t {
 private:
     point_t a_;
     point_t b_;
+
+    int sideOfLine(const point_t& p, const vector_t& planeNormal) const;
+    bool projectionFallsOnSegment(const point_t& p) const;
 
 public:
     segment_t(const point_t &a, const point_t &b);
@@ -62,16 +76,22 @@ public:
 
     double length() const { return a_.distance(b_); };
     vector_t direction() const;
+
+    bool intersects(const segment_t& other, const vector_t& planeNormal) const;
 };
 
 class polygon_t {
 private:
     std::vector<point_t> points_;
 
+    void validateCollinearity() const;
+    void validateCoplanarity() const;
+    void validateSelfIntersections() const;
+
 public:
     polygon_t(std::vector<point_t> points);
 
-    std::size_t size() const { return points_.size(); };
+    std::size_t numOfPoints() const { return points_.size(); };
     const std::vector<point_t>& points() const { return points_; };
     const point_t& point(std::size_t i) const { return points()[i]; };
 
@@ -94,4 +114,4 @@ public:
     double lenCA() const;
 };
 
-} // namespace geometry
+}
