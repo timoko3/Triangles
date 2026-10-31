@@ -4,7 +4,9 @@
 
 #include "initPolysData.hpp"
 
-namespace lexer { class TokenStream; }
+namespace lexer {
+class TokenStream;
+}
 
 namespace HW3D {
 

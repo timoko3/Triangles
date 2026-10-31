@@ -16,7 +16,8 @@ int main(int argc, char* argv[]) {
         for (std::size_t i = 0; i < data.data.size(); ++i) {
             std::cout << "Triangle " << i + 1 << ":\n";
             for (const auto& point : data.data[i]) {
-                std::cout << "  " << point.x() << ' ' << point.y() << ' ' << point.z() << '\n';
+                std::cout << "  " << point.x() << ' ' << point.y() << ' '
+                          << point.z() << '\n';
             }
         }
 

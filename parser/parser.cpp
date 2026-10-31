@@ -1,7 +1,8 @@
+#include "parser.hpp"
+
 #include <string>
 #include <utility>
 
-#include "parser.hpp"
 #include "file.h"
 #include "lexer/lexer.h"
 #include "lexer/token_stream.h"
@@ -32,13 +33,14 @@ InitPolysData Parser::parse(lexer::TokenStream& tokens) const {
         vertices.reserve(3);
 
         for (std::size_t vertex = 0; vertex < 3; ++vertex) {
-            const std::string context = " (triangle " + std::to_string(triangle + 1) +
-                                        ", vertex " + std::to_string(vertex + 1) + ")";
+            const std::string context = " (triangle " +
+                                        std::to_string(triangle + 1) + ", vertex " +
+                                        std::to_string(vertex + 1) + ")";
 
             const double x = tokens.expectDouble("Expected x coordinate" + context);
             const double y = tokens.expectDouble("Expected y coordinate" + context);
             const double z = tokens.expectDouble("Expected z coordinate" + context);
-            
+
             vertices.emplace_back(x, y, z);
         }
         result.data.push_back(std::move(vertices));
