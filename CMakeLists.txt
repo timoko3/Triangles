@@ -20,10 +20,34 @@ function(triangles_configure_target target)
 endfunction()
 
 if(TRIANGLES_BUILD_APP)
+
+    set(GENERAL_FUNCTIONS_DIR "$ENV{GENERAL_FUNCTIONS_DIR}"
+    CACHE PATH "Path to generalFunctions sources")
+
+    if(NOT EXISTS "${GENERAL_FUNCTIONS_DIR}/file.cpp")
+        message(FATAL_ERROR
+            "generalFunctions not found. Run inside nix develop "
+            "or pass -DGENERAL_FUNCTIONS_DIR=/path/to/generalFunctions")
+    endif()
+
+    add_library(general_functions STATIC
+        "${GENERAL_FUNCTIONS_DIR}/file.cpp"
+        "${GENERAL_FUNCTIONS_DIR}/lexer/lexer.cpp"
+        "${GENERAL_FUNCTIONS_DIR}/lexer/token_stream.cpp"
+    )
+
+    target_include_directories(general_functions PUBLIC
+        "${GENERAL_FUNCTIONS_DIR}"
+    )
+
+    target_compile_features(general_functions PUBLIC cxx_std_17)
+
     add_executable(triangles
         main.cpp
         parser/parser.cpp
     )
+
+    target_link_libraries(triangles PRIVATE general_functions)
 
     target_include_directories(triangles PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
