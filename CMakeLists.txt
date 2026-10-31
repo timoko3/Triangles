@@ -66,6 +66,7 @@ option(TRIANGLES_BUILD_OPENGL_DEMO "Build the OpenGL example" OFF)
 if(TRIANGLES_BUILD_OPENGL_DEMO)
     enable_language(C)
     find_package(glfw3 CONFIG REQUIRED)
+    find_package(glm CONFIG REQUIRED)
 
     set(GLAD_SOURCE_DIR ""
         CACHE PATH "Override path to generated GLAD 2 sources")
@@ -87,7 +88,7 @@ if(TRIANGLES_BUILD_OPENGL_DEMO)
     target_include_directories(glad SYSTEM PUBLIC "${glad_source_dir}/include")
 
     add_executable(opengl_demo examples/opengl_demo.cpp)
-    target_link_libraries(opengl_demo PRIVATE glfw glad)
+    target_link_libraries(opengl_demo PRIVATE glfw glad glm::glm)
     target_compile_definitions(opengl_demo PRIVATE GLFW_INCLUDE_NONE)
 
     triangles_configure_target(opengl_demo)
