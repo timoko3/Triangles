@@ -13,7 +13,8 @@
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
         "TRIANGLES_BUILD_APP": false,
-        "BUILD_TESTING": true
+        "BUILD_TESTING": true,
+        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "$env{GENERAL_FUNCTIONS_CLANG_SCAN_DEPS}"
       }
     },
     {
@@ -37,8 +38,7 @@
       "displayName": "Triangle input parser",
       "inherits": "debug",
       "cacheVariables": {
-        "TRIANGLES_BUILD_APP": true,
-        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "$env{GENERAL_FUNCTIONS_CLANG_SCAN_DEPS}"
+        "TRIANGLES_BUILD_APP": true
       }
     },
     {
@@ -56,7 +56,6 @@
       "cacheVariables": {
         "TRIANGLES_BUILD_APP": true,
         "CMAKE_CXX_FLAGS": "$env{CXXFLAGS}",
-        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "$env{GENERAL_FUNCTIONS_CLANG_SCAN_DEPS}",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     }
