@@ -1,3 +1,10 @@
+# Use LF for text files on both Windows and Linux.
+* text=auto eol=lf
+
+# Windows batch scripts require CRLF.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
 # clang-format uses LF on every platform, including Windows checkouts.
 *.c text eol=lf
 *.cc text eol=lf

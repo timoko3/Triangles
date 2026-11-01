@@ -3,7 +3,7 @@
 #include <array>
 #include <vector>
 
-namespace triangles {
+namespace triangles::visualizer {
 
 struct RenderVertex {
     std::array<float, 3> position;
@@ -26,4 +26,4 @@ struct RenderData {
     std::vector<RenderPrimitive> highlights;
 };
 
-} // namespace triangles
+} // namespace triangles::visualizer
