@@ -7,6 +7,7 @@ endif()
 project(Triangles VERSION 0.1.0 LANGUAGES CXX)
 
 option(TRIANGLES_BUILD_APP "Build the triangle input parser" OFF)
+include(CTest)
 
 function(triangles_configure_target target)
     target_compile_features(${target} PRIVATE cxx_std_17)
@@ -18,7 +19,7 @@ function(triangles_configure_target target)
     endif()
 endfunction()
 
-if(TRIANGLES_BUILD_APP)
+if(TRIANGLES_BUILD_APP OR BUILD_TESTING)
     set(GENERAL_FUNCTIONS_SOURCE_DIR "" CACHE PATH
         "Optional local generalFunctions checkout; otherwise use the installed package")
 
@@ -37,7 +38,9 @@ if(TRIANGLES_BUILD_APP)
     else()
         find_package(GeneralFunctions CONFIG REQUIRED COMPONENTS lexer files geometry)
     endif()
+endif()
 
+if(TRIANGLES_BUILD_APP)
     add_executable(triangles
         main.cpp
         parser/parser.cpp
@@ -56,15 +59,6 @@ if(TRIANGLES_BUILD_APP)
     )
 
     triangles_configure_target(triangles)
-
-    include(CTest)
-    if(BUILD_TESTING)
-        add_executable(geometry_smoke tests/geometry_smoke.cpp)
-        target_link_libraries(geometry_smoke PRIVATE GeneralFunctions::geometry)
-        triangles_configure_target(geometry_smoke)
-        set_property(TARGET geometry_smoke PROPERTY CXX_SCAN_FOR_MODULES ON)
-        add_test(NAME geometry_smoke COMMAND geometry_smoke)
-    endif()
 endif()
 
 option(TRIANGLES_BUILD_OPENGL_DEMO "Build the OpenGL example" OFF)
@@ -98,4 +92,48 @@ if(TRIANGLES_BUILD_OPENGL_DEMO)
     target_compile_definitions(opengl_demo PRIVATE GLFW_INCLUDE_NONE)
 
     triangles_configure_target(opengl_demo)
+endif()
+
+if(BUILD_TESTING)
+    find_package(GTest CONFIG REQUIRED)
+    include(GoogleTest)
+
+    # Installed packages expose libraries; the Nix input supplies their test sources.
+    set(GENERAL_FUNCTIONS_TEST_SOURCE_DIR "$ENV{GENERAL_FUNCTIONS_TEST_SOURCE_DIR}"
+        CACHE PATH "generalFunctions sources containing lexer and token stream tests")
+    if(GENERAL_FUNCTIONS_SOURCE_DIR)
+        set(general_functions_test_dir "${GENERAL_FUNCTIONS_SOURCE_DIR}")
+    else()
+        set(general_functions_test_dir "${GENERAL_FUNCTIONS_TEST_SOURCE_DIR}")
+    endif()
+
+    foreach(component lexer token_stream)
+        set(test_source "${general_functions_test_dir}/tests/${component}_test.cpp")
+        if(NOT EXISTS "${test_source}")
+            message(FATAL_ERROR
+                "generalFunctions test source not found: ${test_source}. Use nix develop "
+                "or set GENERAL_FUNCTIONS_TEST_SOURCE_DIR to a checkout with GoogleTest tests.")
+        endif()
+        add_executable(${component}_tests "${test_source}")
+        target_link_libraries(${component}_tests PRIVATE GeneralFunctions::lexer GTest::gtest_main)
+        triangles_configure_target(${component}_tests)
+        gtest_discover_tests(${component}_tests)
+    endforeach()
+
+    add_executable(parser_tests tests/parser_test.cpp parser/parser.cpp)
+    target_include_directories(parser_tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/polygonProcessor")
+    target_link_libraries(parser_tests PRIVATE
+        GeneralFunctions::lexer GeneralFunctions::files GTest::gtest_main)
+    target_compile_definitions(parser_tests PRIVATE
+        TRIANGLES_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+    triangles_configure_target(parser_tests)
+    gtest_discover_tests(parser_tests)
+
+    add_executable(geometry_smoke tests/geometry_smoke.cpp)
+    target_link_libraries(geometry_smoke PRIVATE GeneralFunctions::geometry GTest::gtest_main)
+    triangles_configure_target(geometry_smoke)
+    set_property(TARGET geometry_smoke PROPERTY CXX_SCAN_FOR_MODULES ON)
+    gtest_discover_tests(geometry_smoke)
 endif()

@@ -1,5 +1,5 @@
 {
-  description = "Triangles development environment and build checks";
+  description = "Triangles development environment and GoogleTest checks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -71,8 +71,10 @@
           pkgs.glfw
           pkgs.glm
           generalFunctionsPackage
+          pkgs.gtest
         ];
 
+        GENERAL_FUNCTIONS_TEST_SOURCE_DIR = "${generalFunctions}";
         GLAD_SOURCE_DIR = "${gladSources}";
         GENERAL_FUNCTIONS_CLANG_SCAN_DEPS = "${llvm.clang-tools}/bin/clang-scan-deps";
         # Expose wrapper settings checked when clang-tidy loads a compiled module.
@@ -88,22 +90,37 @@
           nativeBuildInputs = [ pkgs.cmake pkgs.ninja llvm.clang ];
         } ''
           export CC=clang CXX=clang++
-          cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF
+          cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF -DBUILD_TESTING=OFF
           cmake --build build
+          touch "$out"
+        '';
+
+        tests = pkgs.runCommand "triangles-tests" {
+          nativeBuildInputs = [ pkgs.cmake pkgs.ninja llvm.stdenv.cc llvm.clang-tools ];
+          buildInputs = [ generalFunctionsPackage pkgs.gtest ];
+        } ''
+          cmake -S ${self} -B build -G Ninja \
+            -DTRIANGLES_BUILD_APP=OFF -DBUILD_TESTING=ON \
+            -DGENERAL_FUNCTIONS_TEST_SOURCE_DIR=${generalFunctions} \
+            -DCMAKE_CXX_COMPILER=${llvm.stdenv.cc}/bin/clang++ \
+            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS=${llvm.clang-tools}/bin/clang-scan-deps
+          cmake --build build
+          ctest --test-dir build --output-on-failure --no-tests=error
           touch "$out"
         '';
 
         application = pkgs.runCommand "triangles-application" {
           nativeBuildInputs = [ pkgs.cmake pkgs.ninja llvm.stdenv.cc llvm.clang-tools ];
-          buildInputs = [ generalFunctionsPackage ];
+          buildInputs = [ generalFunctionsPackage pkgs.gtest ];
         } ''
           set -euo pipefail
           cmake -S ${self} -B build -G Ninja \
             -DTRIANGLES_BUILD_APP=ON \
+            -DGENERAL_FUNCTIONS_TEST_SOURCE_DIR=${generalFunctions} \
             -DCMAKE_CXX_COMPILER=${llvm.stdenv.cc}/bin/clang++ \
             -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS=${llvm.clang-tools}/bin/clang-scan-deps
           cmake --build build
-          ctest --test-dir build --output-on-failure
+          ctest --test-dir build --output-on-failure --no-tests=error
           ./build/triangles ${self}/inputs/input_1.txt | grep '^Read 1 triangles$'
           ./build/triangles ${self}/inputs/input_2.txt | grep '^Read 2 triangles$'
           touch "$out"

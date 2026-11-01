@@ -10,15 +10,20 @@ cacheResearch's pinned nixpkgs revision.
 ```sh
 cmake --preset debug
 cmake --build --preset debug
+ctest --preset debug
 cmake --preset release
 cmake --build --preset release
+ctest --preset release
 ```
 
 These presets fetch no dependencies and do not compile unfinished headers.
+Run them inside `nix develop`: GoogleTest, the installed GeneralFunctions package
+and its test sources are provided by Nix. Tests are enabled by default; use
+`-DBUILD_TESTING=OFF` to disable them.
 `TRIANGLES_BUILD_APP` defaults to `OFF`. The `app` preset builds the parser CLI;
 the `quality` preset also generates `compile_commands.json` for analysis.
 Both use the installed GeneralFunctions package with `lexer`, `files` and
-`geometry`. The parser uses lexer/files; a smoke test imports the geometry module
+`geometry`. The parser uses lexer/files; a GoogleTest integration test imports the geometry module
 and checks a 3-4-5 triangle. The app links the geometry target for future use.
 Use a toolchain supported by CMake C++ modules: the Nix shell provides Clang 18
 and the wrapped clang-scan-deps. GCC 13 is insufficient for this CMake workflow.
@@ -67,6 +72,13 @@ cmake -S . -B build/local -G Ninja -DCMAKE_CXX_COMPILER=clang++ \
   -DGENERAL_FUNCTIONS_SOURCE_DIR=/path/to/generalFunctions
 cmake --build build/local
 ```
+
+The lexer and token stream GoogleTest sources stay in generalFunctions. The shell
+sets `GENERAL_FUNCTIONS_TEST_SOURCE_DIR` to the same pinned input used to build
+the installed library; CTest runs those suites alongside the parser and geometry
+tests. With `GENERAL_FUNCTIONS_SOURCE_DIR`, both the library and tests use that
+local checkout instead. For a manually installed package with tests enabled,
+set `-DGENERAL_FUNCTIONS_TEST_SOURCE_DIR=/path/to/generalFunctions` too.
 
 The old `GENERAL_FUNCTIONS_DIR` setting is no longer used. For a manually
 installed package outside Nix, pass its prefix through `CMAKE_PREFIX_PATH`.
