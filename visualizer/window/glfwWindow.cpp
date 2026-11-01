@@ -3,7 +3,9 @@
 #include <limits>
 #include <stdexcept>
 
+#ifndef GLFW_INCLUDE_NONE
 #define GLFW_INCLUDE_NONE
+#endif
 #include <GLFW/glfw3.h>
 
 namespace triangles::visualizer {
@@ -32,9 +34,10 @@ std::shared_ptr<GlfwWindow::Runtime> GlfwWindow::acquireRuntime() {
 
 GlfwWindow::GlfwWindow(const WindowSettings& settings, GraphicsApi graphics) {
     const auto maxSize = static_cast<std::uint32_t>(std::numeric_limits<int>::max());
-    if (settings.width == 0 || settings.height == 0 ||
-        settings.width > maxSize || settings.height > maxSize) {
-        throw std::invalid_argument("Window dimensions must be positive and fit in int");
+    if (settings.width == 0 || settings.height == 0 || settings.width > maxSize ||
+        settings.height > maxSize) {
+        throw std::invalid_argument(
+            "Window dimensions must be positive and fit in int");
     }
 
     runtime_ = acquireRuntime();
@@ -54,19 +57,27 @@ GlfwWindow::GlfwWindow(const WindowSettings& settings, GraphicsApi graphics) {
         default:
             throw std::invalid_argument("Unknown graphics API");
     }
+
     glfwWindowHint(GLFW_RESIZABLE, settings.resizable ? GLFW_TRUE : GLFW_FALSE);
 
     window_ = glfwCreateWindow(static_cast<int>(settings.width),
                                static_cast<int>(settings.height),
-                               settings.title.c_str(), nullptr, nullptr);
+                               settings.title.c_str(),
+                               nullptr,
+                               nullptr);
     if (!window_) {
-        throw std::runtime_error("Failed to create GLFW window for the selected graphics API");
+        throw std::runtime_error(
+            "Failed to create GLFW window for the selected graphics API");
     }
 }
 
-GlfwWindow::~GlfwWindow() { glfwDestroyWindow(window_); }
+GlfwWindow::~GlfwWindow() {
+    glfwDestroyWindow(window_);
+}
 
-void GlfwWindow::pollEvents() { glfwPollEvents(); }
+void GlfwWindow::pollEvents() {
+    glfwPollEvents();
+}
 
 bool GlfwWindow::shouldClose() const {
     return glfwWindowShouldClose(window_) == GLFW_TRUE;
@@ -75,9 +86,12 @@ bool GlfwWindow::shouldClose() const {
 FramebufferSize GlfwWindow::framebufferSize() const {
     FramebufferSize size{};
     glfwGetFramebufferSize(window_, &size.width, &size.height);
+
     return size;
 }
 
-GLFWwindow* GlfwWindow::getWindow() const noexcept { return window_; }
+GLFWwindow* GlfwWindow::getWindow() const noexcept {
+    return window_;
+}
 
 } // namespace triangles::visualizer

@@ -1,21 +1,24 @@
-#pragma once 
+#pragma once
 
 #include <utility>
-#include "viewerBackend.hpp"
+#include <vector>
+
+#include "renderView.hpp"
+#include "visualizerBackend.hpp"
 
 namespace triangles::visualizer {
-
-class Scene;
-struct CameraId;
 
 class Viewer {
 private:
     ViewerBackend ViewerBackend_;
+    std::vector<RenderView> views_;
+
 public:
     Viewer() = default;
     explicit Viewer(ViewerBackend backend) : ViewerBackend_(std::move(backend)) {}
 
-    void addView(const Scene& scene, CameraId camera);
+    void addView(const Scene& scene, CameraId camera,
+                 NormalizedViewport viewport = {});
 
     void addBackend(ViewerBackend backend) {
         ViewerBackend_.renderer.reset();
@@ -26,4 +29,4 @@ public:
     void drawFrame();
 };
 
-}
+} // namespace triangles::visualizer

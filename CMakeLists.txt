@@ -70,25 +70,7 @@ endif()
 option(TRIANGLES_BUILD_OPENGL_DEMO "Build the OpenGL example" OFF)
 option(TRIANGLES_BUILD_VISUALIZER "Build the visualizer window and backend factory" OFF)
 
-if(TRIANGLES_BUILD_VISUALIZER)
-    find_package(glfw3 CONFIG REQUIRED)
-    add_library(triangles_visualizer
-        visualizer/backendFactory.cpp
-        visualizer/glfwWindow.cpp)
-    target_include_directories(triangles_visualizer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-    target_link_libraries(triangles_visualizer PRIVATE glfw)
-    target_compile_features(triangles_visualizer PUBLIC cxx_std_20)
-    triangles_configure_target(triangles_visualizer)
-    set_property(TARGET triangles_visualizer PROPERTY CXX_SCAN_FOR_MODULES OFF)
-
-    find_package(Threads REQUIRED)
-    add_executable(renderTest renderTest.cpp)
-    target_link_libraries(renderTest PRIVATE triangles_visualizer Threads::Threads)
-    triangles_configure_target(renderTest)
-    set_property(TARGET renderTest PROPERTY CXX_SCAN_FOR_MODULES OFF)
-endif()
-
-if(TRIANGLES_BUILD_OPENGL_DEMO)
+if(TRIANGLES_BUILD_OPENGL_DEMO OR TRIANGLES_BUILD_VISUALIZER)
     enable_language(C)
     find_package(glfw3 CONFIG REQUIRED)
     find_package(glm CONFIG REQUIRED)
@@ -112,6 +94,34 @@ if(TRIANGLES_BUILD_OPENGL_DEMO)
     target_compile_features(glad PRIVATE c_std_99)
     target_include_directories(glad SYSTEM PUBLIC "${glad_source_dir}/include")
 
+endif()
+
+if(TRIANGLES_BUILD_VISUALIZER)
+    find_package(Threads REQUIRED)
+    add_library(triangles_visualizer
+        visualizer/backendFactory.cpp
+        visualizer/scene/camera.cpp
+        visualizer/scene/scene.cpp
+        visualizer/window/glfwWindow.cpp
+        visualizer/visualizer.cpp
+        visualizer/renderer/openGLRenderer.cpp
+        visualizer/renderer/openGLRenderDataPreparer.cpp
+        visualizer/renderer/matrices.cpp
+        visualizer/renderer/shaderProgram.cpp)
+    target_include_directories(triangles_visualizer PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+    target_link_libraries(triangles_visualizer PRIVATE glfw glad glm::glm Threads::Threads)
+    target_compile_definitions(triangles_visualizer PRIVATE GLFW_INCLUDE_NONE)
+    target_compile_features(triangles_visualizer PUBLIC cxx_std_20)
+    triangles_configure_target(triangles_visualizer)
+    set_property(TARGET triangles_visualizer PROPERTY CXX_SCAN_FOR_MODULES OFF)
+
+    add_executable(renderTest renderTest.cpp)
+    target_link_libraries(renderTest PRIVATE triangles_visualizer)
+    triangles_configure_target(renderTest)
+    set_property(TARGET renderTest PROPERTY CXX_SCAN_FOR_MODULES OFF)
+endif()
+
+if(TRIANGLES_BUILD_OPENGL_DEMO)
     add_executable(opengl_demo examples/opengl_demo.cpp)
     target_link_libraries(opengl_demo PRIVATE glfw glad glm::glm)
     target_compile_definitions(opengl_demo PRIVATE GLFW_INCLUDE_NONE)

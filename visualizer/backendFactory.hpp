@@ -1,7 +1,7 @@
-#pragma once 
+#pragma once
 
 #include "backendSettings.hpp"
-#include "viewerBackend.hpp"
+#include "visualizerBackend.hpp"
 
 namespace triangles::visualizer {
 
@@ -10,4 +10,4 @@ public:
     static ViewerBackend create(const BackendSettings& settings);
 };
 
-}
+} // namespace triangles::visualizer
