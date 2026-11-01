@@ -24,9 +24,13 @@ public:
         return intersectionData_;
     }
 
-    const std::vector<Poly<DimPoly>>& polys() const { return polys_; }
+    const std::vector<Poly<DimPoly>>& polys() const {
+        return polys_;
+    }
 
-    const IntersectionData& intersectionData() const { return intersectionData_; }
+    const IntersectionData& intersectionData() const {
+        return intersectionData_;
+    }
 };
 
-} // namespace triangles
+} // namespace HW3D
