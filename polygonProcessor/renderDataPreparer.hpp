@@ -7,7 +7,7 @@
 #include "../render/renderData.hpp"
 #include "intersectionData.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 struct RenderStyle {
     std::array<float, 4> polyColor{0.7f, 0.7f, 0.7f, 1.0f};
@@ -28,4 +28,4 @@ public:
                        const RenderStyle& style) const;
 };
 
-} // namespace HW3D
+} // namespace triangles

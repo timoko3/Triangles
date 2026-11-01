@@ -6,7 +6,7 @@
 
 #include "intersectionData.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 // template <std::size_t DimPoly>
 // class Poly;
@@ -23,4 +23,4 @@ private:
                                                    const Poly<DimPoly>& second);
 };
 
-} // namespace HW3D
+} // namespace triangles

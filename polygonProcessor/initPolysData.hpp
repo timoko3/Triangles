@@ -2,7 +2,7 @@
 
 #include <vector>
 
-namespace HW3D {
+namespace triangles {
 
 class Point {
 public:
@@ -23,4 +23,4 @@ struct InitPolysData {
     std::vector<std::vector<Point>> data;
 };
 
-} // namespace HW3D
+} // namespace triangles

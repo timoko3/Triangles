@@ -8,7 +8,7 @@
 #include "polyWorld.hpp"
 #include "renderDataPreparer.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 template <std::size_t DimWorld, std::size_t DimPoly>
 class PolyProcessor {
@@ -32,4 +32,4 @@ public:
     }
 };
 
-} // namespace HW3D
+} // namespace triangles

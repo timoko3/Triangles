@@ -7,7 +7,7 @@
 #include "lexer/lexer.h"
 #include "lexer/token_stream.h"
 
-namespace HW3D {
+namespace triangles {
 
 constexpr int MAX_NUM_OF_POLY = 1'000'000;
 
@@ -19,7 +19,7 @@ InitPolysData Parser::parse(const std::filesystem::path& path) const {
 
 InitPolysData Parser::parse(lexer::TokenStream& tokens) const {
     const lexer::Token& countToken = tokens.peekToken();
-    const int count = tokens.expectInt("Expected an integer triangle count N");
+    const auto count = tokens.expectInt("Expected an integer triangle count N");
 
     if (count <= 0 || count >= MAX_NUM_OF_POLY) {
         tokens.failAtToken(countToken, "Triangle count must be 0 < N < 1000000");
@@ -50,4 +50,4 @@ InitPolysData Parser::parse(lexer::TokenStream& tokens) const {
     return result;
 }
 
-} // namespace HW3D
+} // namespace triangles

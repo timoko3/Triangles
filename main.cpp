@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
     }
 
     try {
-        const auto data = HW3D::Parser{}.parse(std::filesystem::path{argv[1]});
+        const auto data = triangles::Parser{}.parse(std::filesystem::path{argv[1]});
         std::cout << "Read " << data.data.size() << " triangles\n";
         for (std::size_t i = 0; i < data.data.size(); ++i) {
             std::cout << "Triangle " << i + 1 << ":\n";

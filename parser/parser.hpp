@@ -8,7 +8,7 @@ namespace lexer {
 class TokenStream;
 }
 
-namespace HW3D {
+namespace triangles {
 
 class Parser {
 public:
@@ -16,4 +16,4 @@ public:
     InitPolysData parse(lexer::TokenStream& tokens) const;
 };
 
-} // namespace HW3D
+} // namespace triangles

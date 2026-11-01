@@ -2,7 +2,7 @@
 
 #include "renderData.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 // Interface sketch. Camera, lighting, scene and GPU resources are renderer state.
 // The concrete state and OpenGL implementation will be defined separately.
@@ -13,4 +13,4 @@ public:
     void draw(const RenderData& data);
 };
 
-} // namespace HW3D
+} // namespace triangles

@@ -7,7 +7,7 @@
 #include "intersectionData.hpp"
 #include "polyCalculator.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 template <std::size_t DimWorld, std::size_t DimPoly>
 class PolyWorld {
@@ -29,4 +29,4 @@ public:
     const IntersectionData& intersectionData() const { return intersectionData_; }
 };
 
-} // namespace HW3D
+} // namespace triangles
