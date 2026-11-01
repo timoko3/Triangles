@@ -21,12 +21,13 @@
     "generalFunctions": {
       "flake": false,
       "locked": {
-        "lastModified": 1793144152,
-        "narHash": "sha256-O+el8m1Oii9cf4EEh8R07EKhZwiW5P7t5jlrO3mTvpw=",
-        "owner": "timoko3",
-        "repo": "generalFunctions",
-        "rev": "f54969e31e8ea65ffa0ca7b1c0894b4996c618dc",
-        "type": "github"
+        "lastModified": 1793535562,
+        "narHash": "sha256-wFn7d0YDQZzcRiCH39xjlO6NIs9+/cZqW/qcLLwBdgw=",
+        "ref": "refs/heads/main",
+        "rev": "d6374e223907530d9d74b78332b4d5ec1d1d7019",
+        "revCount": 37,
+        "type": "git",
+        "url": "https://github.com/timoko3/generalFunctions.git"
       },
       "original": {
         "owner": "timoko3",

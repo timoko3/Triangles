@@ -8,6 +8,7 @@ project(Triangles VERSION 0.1.0 LANGUAGES CXX)
 
 # The geometry and renderer headers are interface sketches for now.
 option(TRIANGLES_BUILD_APP "Build the current main.cpp placeholder" OFF)
+include(CTest)
 
 function(triangles_configure_target target)
     target_compile_features(${target} PRIVATE cxx_std_17)
@@ -19,40 +20,32 @@ function(triangles_configure_target target)
     endif()
 endfunction()
 
-if(TRIANGLES_BUILD_APP)
-
-    set(GENERAL_FUNCTIONS_DIR ""
-        CACHE PATH "Override path to generalFunctions sources")
+if(TRIANGLES_BUILD_APP OR BUILD_TESTING)
+    set(GENERAL_FUNCTIONS_DIR "" CACHE PATH "Override path to generalFunctions sources")
     if(GENERAL_FUNCTIONS_DIR)
         set(general_functions_dir "${GENERAL_FUNCTIONS_DIR}")
     else()
         set(general_functions_dir "$ENV{GENERAL_FUNCTIONS_DIR}")
     endif()
 
-    if(NOT EXISTS "${general_functions_dir}/file.cpp")
-        message(FATAL_ERROR
-            "generalFunctions not found at '${general_functions_dir}'. Run inside nix develop "
-            "or pass -DGENERAL_FUNCTIONS_DIR=/path/to/generalFunctions")
+    if(NOT EXISTS "${general_functions_dir}/CMakeLists.txt")
+        message(FATAL_ERROR "generalFunctions not found. Use nix develop or set GENERAL_FUNCTIONS_DIR.")
     endif()
 
-    add_library(general_functions STATIC
-        "${general_functions_dir}/file.cpp"
-        "${general_functions_dir}/lexer/lexer.cpp"
-        "${general_functions_dir}/lexer/token_stream.cpp"
-    )
+    set(GENERAL_FUNCTIONS_BUILD_LEXER ON CACHE BOOL "" FORCE)
+    set(GENERAL_FUNCTIONS_BUILD_GEOMETRY OFF CACHE BOOL "" FORCE)
+    set(GENERAL_FUNCTIONS_BUILD_FILES ON CACHE BOOL "" FORCE)
+    set(GENERAL_FUNCTIONS_BUILD_TESTS ${BUILD_TESTING} CACHE BOOL "" FORCE)
+    add_subdirectory("${general_functions_dir}" "${CMAKE_BINARY_DIR}/generalFunctions")
+endif()
 
-    target_include_directories(general_functions PUBLIC
-        "${general_functions_dir}"
-    )
-
-    target_compile_features(general_functions PUBLIC cxx_std_17)
-
+if(TRIANGLES_BUILD_APP)
     add_executable(triangles
         main.cpp
         parser/parser.cpp
     )
 
-    target_link_libraries(triangles PRIVATE general_functions)
+    target_link_libraries(triangles PRIVATE GeneralFunctions::lexer GeneralFunctions::files)
 
     target_include_directories(triangles PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -93,4 +86,19 @@ if(TRIANGLES_BUILD_OPENGL_DEMO)
     target_compile_definitions(opengl_demo PRIVATE GLFW_INCLUDE_NONE)
 
     triangles_configure_target(opengl_demo)
+endif()
+
+if(BUILD_TESTING)
+    find_package(GTest CONFIG REQUIRED)
+    include(GoogleTest)
+    add_executable(parser_tests tests/parser_test.cpp parser/parser.cpp)
+    target_include_directories(parser_tests PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}"
+        "${CMAKE_CURRENT_SOURCE_DIR}/polygonProcessor")
+    target_link_libraries(parser_tests PRIVATE
+        GeneralFunctions::lexer GeneralFunctions::files GTest::gtest_main)
+    target_compile_definitions(parser_tests PRIVATE
+        TRIANGLES_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
+    triangles_configure_target(parser_tests)
+    gtest_discover_tests(parser_tests)
 endif()

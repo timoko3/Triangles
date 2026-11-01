@@ -8,18 +8,19 @@
       "generator": "Ninja",
       "binaryDir": "${sourceDir}/build/${presetName}",
       "cacheVariables": {
-        "TRIANGLES_BUILD_APP": false
+        "TRIANGLES_BUILD_APP": false,
+        "BUILD_TESTING": true
       }
     },
     {
       "name": "debug",
-      "displayName": "Debug scaffold",
+      "displayName": "Debug with tests",
       "inherits": "base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
     },
     {
       "name": "release",
-      "displayName": "Release scaffold",
+      "displayName": "Release with tests",
       "inherits": "base",
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
@@ -46,5 +47,25 @@
     { "name": "release", "configurePreset": "release" },
     { "name": "quality", "configurePreset": "quality" },
     { "name": "opengl-demo", "configurePreset": "opengl-demo" }
+  ],
+  "testPresets": [
+    {
+      "name": "debug",
+      "configurePreset": "debug",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    },
+    {
+      "name": "quality",
+      "configurePreset": "quality",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error" }
+    }
   ]
 }

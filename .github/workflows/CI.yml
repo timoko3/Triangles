@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build:
-    name: Configure scaffold (${{ matrix.preset }})
+    name: Build and test (${{ matrix.preset }})
     runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
@@ -22,12 +22,20 @@ jobs:
         preset: [debug, release, quality]
     steps:
       - uses: actions/checkout@v7
+      - name: Check out generalFunctions tests
+        uses: actions/checkout@v7
+        with:
+          repository: timoko3/generalFunctions
+          ref: tests
+          path: generalFunctions
       - name: Install Nix
         uses: cachix/install-nix-action@v31
       - name: Configure
-        run: nix develop --command cmake --preset ${{ matrix.preset }}
+        run: nix develop --override-input generalFunctions path:./generalFunctions --no-write-lock-file --command cmake --preset ${{ matrix.preset }}
       - name: Build available targets
-        run: nix develop --command cmake --build --preset ${{ matrix.preset }} --parallel 2
+        run: nix develop --override-input generalFunctions path:./generalFunctions --no-write-lock-file --command cmake --build --preset ${{ matrix.preset }} --parallel 2
+      - name: Run GoogleTest suites
+        run: nix develop --override-input generalFunctions path:./generalFunctions --no-write-lock-file --command ctest --preset ${{ matrix.preset }}
 
   format:
     name: Check C++ formatting
@@ -44,11 +52,17 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - name: Check out generalFunctions tests
+        uses: actions/checkout@v7
+        with:
+          repository: timoko3/generalFunctions
+          ref: tests
+          path: generalFunctions
       - name: Install Nix
         uses: cachix/install-nix-action@v31
       - name: Install clang-tidy 18
         run: sudo apt-get update && sudo apt-get install --yes clang-tidy-18 ninja-build
       - name: Configure compilation database
-        run: nix develop --command cmake --preset quality
+        run: nix develop --override-input generalFunctions path:./generalFunctions --no-write-lock-file --command cmake --preset quality
       - name: Analyze project sources
-        run: nix develop --command python3 scripts/code_quality.py tidy --build-dir build/quality
+        run: nix develop --override-input generalFunctions path:./generalFunctions --no-write-lock-file --command python3 scripts/code_quality.py tidy --build-dir build/quality

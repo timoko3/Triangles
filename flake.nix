@@ -1,5 +1,5 @@
 {
-    description = "Triangles development environment and CMake scaffold checks";
+  description = "Triangles development environment and GoogleTest checks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -64,6 +64,7 @@
         buildInputs = [
           pkgs.glfw
           pkgs.glm
+          pkgs.gtest
         ];
 
         GENERAL_FUNCTIONS_DIR = "${generalFunctions}";
@@ -74,16 +75,19 @@
         '';
       };
 
-      checks.${system}.scaffold = pkgs.runCommand "triangles-scaffold" {
+      checks.${system}.tests = pkgs.runCommand "triangles-tests" {
         nativeBuildInputs = [
           pkgs.cmake
           pkgs.ninja
-          llvm.clang
+          llvm.stdenv.cc
         ];
+        buildInputs = [ pkgs.gtest ];
       } ''
         export CC=clang CXX=clang++
-        cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF
+        cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF -DBUILD_TESTING=ON \
+          -DGENERAL_FUNCTIONS_DIR=${generalFunctions}
         cmake --build build
+        ctest --test-dir build --output-on-failure --no-tests=error
         touch "$out"
       '';
     };
