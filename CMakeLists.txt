@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.28)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not supported. Use a separate build directory.")
@@ -6,8 +6,7 @@ endif()
 
 project(Triangles VERSION 0.1.0 LANGUAGES CXX)
 
-# The geometry and renderer headers are interface sketches for now.
-option(TRIANGLES_BUILD_APP "Build the current main.cpp placeholder" OFF)
+option(TRIANGLES_BUILD_APP "Build the triangle input parser" OFF)
 include(CTest)
 
 function(triangles_configure_target target)
@@ -21,22 +20,24 @@ function(triangles_configure_target target)
 endfunction()
 
 if(TRIANGLES_BUILD_APP OR BUILD_TESTING)
-    set(GENERAL_FUNCTIONS_DIR "" CACHE PATH "Override path to generalFunctions sources")
-    if(GENERAL_FUNCTIONS_DIR)
-        set(general_functions_dir "${GENERAL_FUNCTIONS_DIR}")
+    set(GENERAL_FUNCTIONS_SOURCE_DIR "" CACHE PATH
+        "Optional local generalFunctions checkout; otherwise use the installed package")
+
+    if(GENERAL_FUNCTIONS_SOURCE_DIR)
+        if(NOT EXISTS "${GENERAL_FUNCTIONS_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR
+                "GENERAL_FUNCTIONS_SOURCE_DIR must contain the generalFunctions CMake project")
+        endif()
+
+        set(GENERAL_FUNCTIONS_BUILD_LEXER ON)
+        set(GENERAL_FUNCTIONS_BUILD_FILES ON)
+        set(GENERAL_FUNCTIONS_BUILD_GEOMETRY ON)
+        set(GENERAL_FUNCTIONS_BUILD_TESTS OFF)
+        add_subdirectory("${GENERAL_FUNCTIONS_SOURCE_DIR}"
+            "${CMAKE_CURRENT_BINARY_DIR}/general-functions" EXCLUDE_FROM_ALL)
     else()
-        set(general_functions_dir "$ENV{GENERAL_FUNCTIONS_DIR}")
+        find_package(GeneralFunctions CONFIG REQUIRED COMPONENTS lexer files geometry)
     endif()
-
-    if(NOT EXISTS "${general_functions_dir}/CMakeLists.txt")
-        message(FATAL_ERROR "generalFunctions not found. Use nix develop or set GENERAL_FUNCTIONS_DIR.")
-    endif()
-
-    set(GENERAL_FUNCTIONS_BUILD_LEXER ON CACHE BOOL "" FORCE)
-    set(GENERAL_FUNCTIONS_BUILD_GEOMETRY OFF CACHE BOOL "" FORCE)
-    set(GENERAL_FUNCTIONS_BUILD_FILES ON CACHE BOOL "" FORCE)
-    set(GENERAL_FUNCTIONS_BUILD_TESTS ${BUILD_TESTING} CACHE BOOL "" FORCE)
-    add_subdirectory("${general_functions_dir}" "${CMAKE_BINARY_DIR}/generalFunctions")
 endif()
 
 if(TRIANGLES_BUILD_APP)
@@ -45,7 +46,12 @@ if(TRIANGLES_BUILD_APP)
         parser/parser.cpp
     )
 
-    target_link_libraries(triangles PRIVATE GeneralFunctions::lexer GeneralFunctions::files)
+    target_link_libraries(triangles PRIVATE
+        GeneralFunctions::lexer
+        GeneralFunctions::files
+        GeneralFunctions::geometry)
+
+    set_property(TARGET triangles PROPERTY CXX_SCAN_FOR_MODULES ON)
 
     target_include_directories(triangles PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -91,6 +97,29 @@ endif()
 if(BUILD_TESTING)
     find_package(GTest CONFIG REQUIRED)
     include(GoogleTest)
+
+    # Installed packages expose libraries; the Nix input supplies their test sources.
+    set(GENERAL_FUNCTIONS_TEST_SOURCE_DIR "$ENV{GENERAL_FUNCTIONS_TEST_SOURCE_DIR}"
+        CACHE PATH "generalFunctions sources containing lexer and token stream tests")
+    if(GENERAL_FUNCTIONS_SOURCE_DIR)
+        set(general_functions_test_dir "${GENERAL_FUNCTIONS_SOURCE_DIR}")
+    else()
+        set(general_functions_test_dir "${GENERAL_FUNCTIONS_TEST_SOURCE_DIR}")
+    endif()
+
+    foreach(component lexer token_stream)
+        set(test_source "${general_functions_test_dir}/tests/${component}_test.cpp")
+        if(NOT EXISTS "${test_source}")
+            message(FATAL_ERROR
+                "generalFunctions test source not found: ${test_source}. Use nix develop "
+                "or set GENERAL_FUNCTIONS_TEST_SOURCE_DIR to a checkout with GoogleTest tests.")
+        endif()
+        add_executable(${component}_tests "${test_source}")
+        target_link_libraries(${component}_tests PRIVATE GeneralFunctions::lexer GTest::gtest_main)
+        triangles_configure_target(${component}_tests)
+        gtest_discover_tests(${component}_tests)
+    endforeach()
+
     add_executable(parser_tests tests/parser_test.cpp parser/parser.cpp)
     target_include_directories(parser_tests PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -101,4 +130,10 @@ if(BUILD_TESTING)
         TRIANGLES_SOURCE_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
     triangles_configure_target(parser_tests)
     gtest_discover_tests(parser_tests)
+
+    add_executable(geometry_smoke tests/geometry_smoke.cpp)
+    target_link_libraries(geometry_smoke PRIVATE GeneralFunctions::geometry GTest::gtest_main)
+    triangles_configure_target(geometry_smoke)
+    set_property(TARGET geometry_smoke PROPERTY CXX_SCAN_FOR_MODULES ON)
+    gtest_discover_tests(geometry_smoke)
 endif()
