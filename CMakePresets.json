@@ -1,6 +1,6 @@
 {
   "version": 5,
-  "cmakeMinimumRequired": { "major": 3, "minor": 24, "patch": 0 },
+  "cmakeMinimumRequired": { "major": 3, "minor": 28, "patch": 0 },
   "configurePresets": [
     {
       "name": "base",
@@ -24,6 +24,15 @@
       "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
     },
     {
+      "name": "app",
+      "displayName": "Triangle input parser",
+      "inherits": "debug",
+      "cacheVariables": {
+        "TRIANGLES_BUILD_APP": true,
+        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "$env{GENERAL_FUNCTIONS_CLANG_SCAN_DEPS}"
+      }
+    },
+    {
       "name": "opengl-demo",
       "displayName": "OpenGL demo",
       "inherits": "debug",
@@ -37,6 +46,8 @@
       "inherits": "debug",
       "cacheVariables": {
         "TRIANGLES_BUILD_APP": true,
+        "CMAKE_CXX_FLAGS": "$env{CXXFLAGS}",
+        "CMAKE_CXX_COMPILER_CLANG_SCAN_DEPS": "$env{GENERAL_FUNCTIONS_CLANG_SCAN_DEPS}",
         "CMAKE_EXPORT_COMPILE_COMMANDS": true
       }
     }
@@ -44,6 +55,7 @@
   "buildPresets": [
     { "name": "debug", "configurePreset": "debug" },
     { "name": "release", "configurePreset": "release" },
+    { "name": "app", "configurePreset": "app" },
     { "name": "quality", "configurePreset": "quality" },
     { "name": "opengl-demo", "configurePreset": "opengl-demo" }
   ]

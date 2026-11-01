@@ -50,5 +50,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install --yes clang-tidy-18 ninja-build
       - name: Configure compilation database
         run: nix develop --command cmake --preset quality
+      - name: Build module interfaces for analysis
+        run: nix develop --command cmake --build --preset quality --parallel 2
       - name: Analyze project sources
         run: nix develop --command python3 scripts/code_quality.py tidy --build-dir build/quality

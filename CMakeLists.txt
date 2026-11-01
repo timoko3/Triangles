@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.28)
 
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR)
     message(FATAL_ERROR "In-source builds are not supported. Use a separate build directory.")
@@ -6,8 +6,7 @@ endif()
 
 project(Triangles VERSION 0.1.0 LANGUAGES CXX)
 
-# The geometry and renderer headers are interface sketches for now.
-option(TRIANGLES_BUILD_APP "Build the current main.cpp placeholder" OFF)
+option(TRIANGLES_BUILD_APP "Build the triangle input parser" OFF)
 
 function(triangles_configure_target target)
     target_compile_features(${target} PRIVATE cxx_std_17)
@@ -20,39 +19,36 @@ function(triangles_configure_target target)
 endfunction()
 
 if(TRIANGLES_BUILD_APP)
+    set(GENERAL_FUNCTIONS_SOURCE_DIR "" CACHE PATH
+        "Optional local generalFunctions checkout; otherwise use the installed package")
 
-    set(GENERAL_FUNCTIONS_DIR ""
-        CACHE PATH "Override path to generalFunctions sources")
-    if(GENERAL_FUNCTIONS_DIR)
-        set(general_functions_dir "${GENERAL_FUNCTIONS_DIR}")
+    if(GENERAL_FUNCTIONS_SOURCE_DIR)
+        if(NOT EXISTS "${GENERAL_FUNCTIONS_SOURCE_DIR}/CMakeLists.txt")
+            message(FATAL_ERROR
+                "GENERAL_FUNCTIONS_SOURCE_DIR must contain the generalFunctions CMake project")
+        endif()
+
+        set(GENERAL_FUNCTIONS_BUILD_LEXER ON)
+        set(GENERAL_FUNCTIONS_BUILD_FILES ON)
+        set(GENERAL_FUNCTIONS_BUILD_GEOMETRY ON)
+        set(GENERAL_FUNCTIONS_BUILD_TESTS OFF)
+        add_subdirectory("${GENERAL_FUNCTIONS_SOURCE_DIR}"
+            "${CMAKE_CURRENT_BINARY_DIR}/general-functions" EXCLUDE_FROM_ALL)
     else()
-        set(general_functions_dir "$ENV{GENERAL_FUNCTIONS_DIR}")
+        find_package(GeneralFunctions CONFIG REQUIRED COMPONENTS lexer files geometry)
     endif()
-
-    if(NOT EXISTS "${general_functions_dir}/file.cpp")
-        message(FATAL_ERROR
-            "generalFunctions not found at '${general_functions_dir}'. Run inside nix develop "
-            "or pass -DGENERAL_FUNCTIONS_DIR=/path/to/generalFunctions")
-    endif()
-
-    add_library(general_functions STATIC
-        "${general_functions_dir}/file.cpp"
-        "${general_functions_dir}/lexer/lexer.cpp"
-        "${general_functions_dir}/lexer/token_stream.cpp"
-    )
-
-    target_include_directories(general_functions PUBLIC
-        "${general_functions_dir}"
-    )
-
-    target_compile_features(general_functions PUBLIC cxx_std_17)
 
     add_executable(triangles
         main.cpp
         parser/parser.cpp
     )
 
-    target_link_libraries(triangles PRIVATE general_functions)
+    target_link_libraries(triangles PRIVATE
+        GeneralFunctions::lexer
+        GeneralFunctions::files
+        GeneralFunctions::geometry)
+
+    set_property(TARGET triangles PROPERTY CXX_SCAN_FOR_MODULES ON)
 
     target_include_directories(triangles PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}"
@@ -60,6 +56,15 @@ if(TRIANGLES_BUILD_APP)
     )
 
     triangles_configure_target(triangles)
+
+    include(CTest)
+    if(BUILD_TESTING)
+        add_executable(geometry_smoke tests/geometry_smoke.cpp)
+        target_link_libraries(geometry_smoke PRIVATE GeneralFunctions::geometry)
+        triangles_configure_target(geometry_smoke)
+        set_property(TARGET geometry_smoke PROPERTY CXX_SCAN_FOR_MODULES ON)
+        add_test(NAME geometry_smoke COMMAND geometry_smoke)
+    endif()
 endif()
 
 option(TRIANGLES_BUILD_OPENGL_DEMO "Build the OpenGL example" OFF)

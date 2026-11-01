@@ -1,5 +1,5 @@
 {
-    description = "Triangles development environment and CMake scaffold checks";
+  description = "Triangles development environment and build checks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";
@@ -10,8 +10,8 @@
     };
 
     generalFunctions = {
-      url = "github:timoko3/generalFunctions";
-      flake = false;
+      url = "github:DREC-Drillers/generalFunctions/main";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 
@@ -20,6 +20,11 @@
       system = "x86_64-linux";
       pkgs = import nixpkgs { inherit system; };
       llvm = pkgs.llvmPackages_18;
+
+      # Install all required components together so find_package sees one prefix.
+      generalFunctionsPackage = generalFunctions.packages.${system}.default.override {
+        buildFiles = true;
+      };
 
       mkShell = pkgs.mkShell.override {
         stdenv = llvm.stdenv;
@@ -58,33 +63,51 @@
           pkgs.ninja
           pkgs.git
           python
+          llvm.clang-tools
           nixGL.packages.${system}.nixGLIntel
         ] ++ qualityTools;
 
         buildInputs = [
           pkgs.glfw
           pkgs.glm
+          generalFunctionsPackage
         ];
 
-        GENERAL_FUNCTIONS_DIR = "${generalFunctions}";
         GLAD_SOURCE_DIR = "${gladSources}";
+        GENERAL_FUNCTIONS_CLANG_SCAN_DEPS = "${llvm.clang-tools}/bin/clang-scan-deps";
+        # Expose wrapper settings checked when clang-tidy loads a compiled module.
+        CXXFLAGS = "-fstack-protector-strong -fwrapv -fPIC -fstrict-flex-arrays=1";
 
         shellHook = ''
           echo "Triangles environment: LLVM 18, CMake, Ninja, Python, GLFW and GLM."
         '';
       };
 
-      checks.${system}.scaffold = pkgs.runCommand "triangles-scaffold" {
-        nativeBuildInputs = [
-          pkgs.cmake
-          pkgs.ninja
-          llvm.clang
-        ];
-      } ''
-        export CC=clang CXX=clang++
-        cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF
-        cmake --build build
-        touch "$out"
-      '';
+      checks.${system} = {
+        scaffold = pkgs.runCommand "triangles-scaffold" {
+          nativeBuildInputs = [ pkgs.cmake pkgs.ninja llvm.clang ];
+        } ''
+          export CC=clang CXX=clang++
+          cmake -S ${self} -B build -G Ninja -DTRIANGLES_BUILD_APP=OFF
+          cmake --build build
+          touch "$out"
+        '';
+
+        application = pkgs.runCommand "triangles-application" {
+          nativeBuildInputs = [ pkgs.cmake pkgs.ninja llvm.stdenv.cc llvm.clang-tools ];
+          buildInputs = [ generalFunctionsPackage ];
+        } ''
+          set -euo pipefail
+          cmake -S ${self} -B build -G Ninja \
+            -DTRIANGLES_BUILD_APP=ON \
+            -DCMAKE_CXX_COMPILER=${llvm.stdenv.cc}/bin/clang++ \
+            -DCMAKE_CXX_COMPILER_CLANG_SCAN_DEPS=${llvm.clang-tools}/bin/clang-scan-deps
+          cmake --build build
+          ctest --test-dir build --output-on-failure
+          ./build/triangles ${self}/inputs/input_1.txt | grep '^Read 1 triangles$'
+          ./build/triangles ${self}/inputs/input_2.txt | grep '^Read 2 triangles$'
+          touch "$out"
+        '';
+      };
     };
 }
