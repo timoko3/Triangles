@@ -4,15 +4,15 @@
 #include <cstddef>
 #include <vector>
 
-#include "intersectionData.hpp"
 #include "../render/renderData.hpp"
+#include "intersectionData.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 struct RenderStyle {
-    std::array<float, 4> polyColor {0.7f, 0.7f, 0.7f, 1.0f};
-    std::array<float, 4> intersectingPolyColor {1.0f, 0.0f, 0.0f, 1.0f};
-    std::array<float, 4> intersectionColor {1.0f, 0.8f, 0.0f, 1.0f};
+    std::array<float, 4> polyColor{0.7f, 0.7f, 0.7f, 1.0f};
+    std::array<float, 4> intersectingPolyColor{1.0f, 0.0f, 0.0f, 1.0f};
+    std::array<float, 4> intersectionColor{1.0f, 0.8f, 0.0f, 1.0f};
 };
 
 // Adapts domain geometry to the renderer's fixed 3D format.
@@ -28,4 +28,4 @@ public:
                        const RenderStyle& style) const;
 };
 
-} // namespace HW3D
+} // namespace triangles

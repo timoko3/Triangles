@@ -1,5 +1,5 @@
 {
-  description = "Triangles development environment and CMake scaffold checks";
+    description = "Triangles development environment and CMake scaffold checks";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-26.05";

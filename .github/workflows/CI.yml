@@ -22,10 +22,12 @@ jobs:
         preset: [debug, release, quality]
     steps:
       - uses: actions/checkout@v7
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
       - name: Configure
-        run: cmake --preset ${{ matrix.preset }}
+        run: nix develop --command cmake --preset ${{ matrix.preset }}
       - name: Build available targets
-        run: cmake --build --preset ${{ matrix.preset }} --parallel 2
+        run: nix develop --command cmake --build --preset ${{ matrix.preset }} --parallel 2
 
   format:
     name: Check C++ formatting
@@ -42,9 +44,11 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31
       - name: Install clang-tidy 18
         run: sudo apt-get update && sudo apt-get install --yes clang-tidy-18 ninja-build
       - name: Configure compilation database
-        run: cmake --preset quality
+        run: nix develop --command cmake --preset quality
       - name: Analyze project sources
-        run: python3 scripts/code_quality.py tidy --build-dir build/quality
+        run: nix develop --command python3 scripts/code_quality.py tidy --build-dir build/quality

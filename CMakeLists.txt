@@ -49,6 +49,7 @@ if(TRIANGLES_BUILD_APP)
 
     add_executable(triangles
         main.cpp
+        parser/parser.cpp
     )
 
     target_link_libraries(triangles PRIVATE general_functions)

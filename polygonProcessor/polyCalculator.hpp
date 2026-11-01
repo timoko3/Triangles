@@ -1,12 +1,12 @@
 #pragma once
 
-#include <vector>
 #include <cstddef>
 #include <optional>
+#include <vector>
 
 #include "intersectionData.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 // template <std::size_t DimPoly>
 // class Poly;
@@ -19,8 +19,8 @@ public:
 
 private:
     // std::nullopt means the pair does not intersect.
-    std::optional<PolyIntersection> IntersectsPoly(const Poly<DimPoly>& first, const Poly<DimPoly>& second);
+    std::optional<PolyIntersection> IntersectsPoly(const Poly<DimPoly>& first,
+                                                   const Poly<DimPoly>& second);
 };
 
-
-} // namespace HW3D
+} // namespace triangles

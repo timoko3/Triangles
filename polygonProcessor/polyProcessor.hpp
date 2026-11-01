@@ -2,13 +2,13 @@
 
 #include <cstddef>
 
+#include "../render/renderer.hpp"
 #include "initPolysData.hpp"
 #include "intersectionData.hpp"
 #include "polyWorld.hpp"
 #include "renderDataPreparer.hpp"
-#include "../render/renderer.hpp"
 
-namespace HW3D {
+namespace triangles {
 
 template <std::size_t DimWorld, std::size_t DimPoly>
 class PolyProcessor {
@@ -26,11 +26,10 @@ public:
 
     void drawPolys() {
         RenderDataPreparer<DimWorld, DimPoly> preparer;
-        RenderData data = preparer.prepare(world_.polys(),
-                                           world_.intersectionData(),
-                                           renderStyle_);
+        RenderData data = preparer.prepare(
+            world_.polys(), world_.intersectionData(), renderStyle_);
         renderer_.draw(data);
     }
 };
 
-} // namespace HW3D
+} // namespace triangles

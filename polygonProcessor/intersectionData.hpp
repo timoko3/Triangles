@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <vector>
 
-namespace HW3D {
+namespace triangles {
 
 class Point;
 
@@ -29,4 +29,4 @@ struct IntersectionData {
     std::vector<Entry> intersections;
 };
 
-} // namespace HW3D
+} // namespace triangles
